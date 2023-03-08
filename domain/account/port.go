@@ -16,9 +16,11 @@ type CreateTransactionOptions struct {
 type StorageRepository interface {
 	CreateAccount(CreateAccountOptions) (int, error)
 	CreateTransaction(CreateTransactionOptions) (int, error)
+	GetAccountByID(int) (Account, error)
 }
 
 type UseCase interface {
 	CreateAccount(CreateAccountOptions) (int, error)
 	CreateTransaction(CreateTransactionOptions) (int, error)
+	GetAccountByID(int) (Account, error)
 }

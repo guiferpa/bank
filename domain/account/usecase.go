@@ -11,3 +11,7 @@ func (ucs *UseCaseService) CreateAccount(opts CreateAccountOptions) (int, error)
 func (ucs *UseCaseService) CreateTransaction(opts CreateTransactionOptions) (int, error) {
 	return ucs.storage.CreateTransaction(opts)
 }
+
+func (ucs *UseCaseService) GetAccountByID(accountID int) (Account, error) {
+	return ucs.storage.GetAccountByID(accountID)
+}
