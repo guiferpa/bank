@@ -38,6 +38,11 @@ func TestCreateAccount(t *testing.T) {
 			return
 		}
 
+		if got, expected := mock.NCalledCreateAccount, s.ExpectedNCalledCreateAccount; got != expected {
+			t.Errorf("unexpected N called CreateAccount, got: %v, expected: %v", got, expected)
+			return
+		}
+
 		if got, expected := mock.DocumentNumberResult, s.ExpectedDocumentNumberResult; got != expected {
 			t.Errorf("unexpected document number, got: %v, expected: %v", got, expected)
 			return
