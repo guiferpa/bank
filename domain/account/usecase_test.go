@@ -9,18 +9,18 @@ type MockStorageRepository struct {
 	DocumentNumberResult      string
 }
 
-func (msr *MockStorageRepository) CreateAccount(opts CreateAccountOptions) (int, error) {
+func (msr *MockStorageRepository) CreateAccount(opts CreateAccountOptions) (uint, error) {
 	msr.NCalledCreateAccount += 1
 	msr.DocumentNumberResult = opts.DocumentNumber
 	return 0, nil
 }
 
-func (msr *MockStorageRepository) CreateTransaction(opts CreateTransactionOptions) (int, error) {
+func (msr *MockStorageRepository) CreateTransaction(opts CreateTransactionOptions) (uint, error) {
 	msr.NCalledCreatedTransaction += 1
 	return 0, nil
 }
 
-func (msr *MockStorageRepository) GetAccountByID(accountID int) (Account, error) {
+func (msr *MockStorageRepository) GetAccountByID(accountID uint) (Account, error) {
 	msr.NCalledGetAccountByID += 1
 	return Account{}, nil
 }
@@ -91,7 +91,7 @@ func TestGetAccountById(t *testing.T) {
 		mock := &MockStorageRepository{}
 		svc := &UseCaseService{storage: mock}
 
-		accountID := 20
+		accountID := uint(20)
 		if _, err := svc.GetAccountByID(accountID); err != nil {
 			t.Error(err)
 			return
