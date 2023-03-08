@@ -32,7 +32,8 @@ func TestCreateAccount(t *testing.T) {
 		mock := &MockStorageRepository{}
 		svc := &UseCaseService{storage: mock}
 
-		if _, err := svc.CreateAccount(CreateAccountOptions{DocumentNumber: s.DocumentNumber}); err != nil {
+		opts := CreateAccountOptions{DocumentNumber: s.DocumentNumber}
+		if _, err := svc.CreateAccount(opts); err != nil {
 			t.Error(err)
 			return
 		}
