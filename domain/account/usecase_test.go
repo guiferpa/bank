@@ -5,6 +5,7 @@ import "testing"
 type MockStorageRepository struct {
 	NCalledCreateAccount      int
 	NCalledCreatedTransaction int
+	NCalledGetAccountByID     int
 	DocumentNumberResult      string
 }
 
@@ -17,6 +18,11 @@ func (msr *MockStorageRepository) CreateAccount(opts CreateAccountOptions) (int,
 func (msr *MockStorageRepository) CreateTransaction(opts CreateTransactionOptions) (int, error) {
 	msr.NCalledCreatedTransaction += 1
 	return 0, nil
+}
+
+func (msr *MockStorageRepository) GetAccountByID(accountID int) (Account, error) {
+	msr.NCalledGetAccountByID += 1
+	return Account{}, nil
 }
 
 func TestCreateAccount(t *testing.T) {
@@ -69,6 +75,30 @@ func TestCreateTransaction(t *testing.T) {
 
 		if got, expected := mock.NCalledCreatedTransaction, s.ExpectedNCalledCreateTransaction; got != expected {
 			t.Errorf("unexpected N called CreateTransaction, got: %v, expected: %v", got, expected)
+			return
+		}
+	}
+}
+
+func TestGetAccountById(t *testing.T) {
+	suite := []struct {
+		ExpectedNCalledGetAccountByID int
+	}{
+		{ExpectedNCalledGetAccountByID: 1},
+	}
+
+	for _, s := range suite {
+		mock := &MockStorageRepository{}
+		svc := &UseCaseService{storage: mock}
+
+		accountID := 20
+		if _, err := svc.GetAccountByID(accountID); err != nil {
+			t.Error(err)
+			return
+		}
+
+		if got, expected := mock.NCalledGetAccountByID, s.ExpectedNCalledGetAccountByID; got != expected {
+			t.Errorf("unexpected N called GetAccountByID, got: %v, expected: %v", got, expected)
 			return
 		}
 	}
