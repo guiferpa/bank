@@ -42,24 +42,51 @@ func TestCreateAccount(t *testing.T) {
 		return
 	}
 
-	createAccountOptions := account.CreateAccountOptions{
-		DocumentNumber: "42",
-	}
-	id, err := client.CreateAccount(createAccountOptions)
-	if err != nil {
-		t.Error(err)
-		return
+	suite := []struct {
+		Describe string
+		Spec     func(t *testing.T)
+	}{
+		{
+			Describe: "Created successful",
+			Spec: func(t *testing.T) {
+				createAccountOptions := account.CreateAccountOptions{
+					DocumentNumber: "42",
+				}
+				id, err := client.CreateAccount(createAccountOptions)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				dest := Account{}
+				if err := client.db.Select("*").Where("id = ?", id).Find(&dest).Error; err != nil {
+					t.Error(err)
+					return
+				}
+
+				if got, expected := dest.DocumentNumber, createAccountOptions.DocumentNumber; got != expected {
+					t.Errorf("unexpected DocumentNumber, got: %s, expected: %s", got, expected)
+					return
+				}
+			},
+		},
+		{
+			Describe: "Duplicated account",
+			Spec: func(t *testing.T) {
+				createAccountOptions := account.CreateAccountOptions{
+					DocumentNumber: "42",
+				}
+				_, err := client.CreateAccount(createAccountOptions)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+			},
+		},
 	}
 
-	dest := Account{}
-	if err := client.db.Select("*").Where("id = ?", id).Find(&dest).Error; err != nil {
-		t.Error(err)
-		return
-	}
-
-	if got, expected := dest.DocumentNumber, createAccountOptions.DocumentNumber; got != expected {
-		t.Errorf("unexpected DocumentNumber, got: %s, expected: %s", got, expected)
-		return
+	for _, s := range suite {
+		t.Run(s.Describe, s.Spec)
 	}
 
 	defer func() {

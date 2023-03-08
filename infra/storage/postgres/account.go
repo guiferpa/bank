@@ -3,8 +3,8 @@ package postgres
 import "time"
 
 type Account struct {
-	ID             uint `gorm:"primaryKey;autoIncrement"`
-	DocumentNumber string
+	ID             uint      `gorm:"primaryKey;autoIncrement"`
+	DocumentNumber string    `gorm:"index;unique"`
 	CreatedAt      time.Time `gorm:"autoCreateTime"`
 }
 
