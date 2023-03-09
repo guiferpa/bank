@@ -76,9 +76,8 @@ func TestCreateAccount(t *testing.T) {
 				createAccountOptions := account.CreateAccountOptions{
 					DocumentNumber: "42",
 				}
-				_, err := client.CreateAccount(createAccountOptions)
-				if err != nil {
-					t.Error(err)
+				if _, err := client.CreateAccount(createAccountOptions); err == nil {
+					t.Errorf("unexpected value for error, got: %v", err)
 					return
 				}
 			},
