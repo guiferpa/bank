@@ -12,6 +12,18 @@ func NewUseCaseCreateAccountError(message string) *UseCaseCreateAccountError {
 	return &UseCaseCreateAccountError{message}
 }
 
+type StorageRepositoryCreateAccountError struct {
+	Message string
+}
+
+func (err *StorageRepositoryCreateAccountError) Error() string {
+	return err.Message
+}
+
+func NewStorageRepositoryCreateAccountError(message string) *StorageRepositoryCreateAccountError {
+	return &StorageRepositoryCreateAccountError{message}
+}
+
 type StorageRepositoryGetAccountByIDError struct {
 	Message string
 }
