@@ -1,11 +1,14 @@
 package postgres
 
-import "time"
+import (
+	"gorm.io/gorm"
+)
 
 type Account struct {
-	ID             uint      `gorm:"primaryKey;autoIncrement"`
-	DocumentNumber string    `gorm:"index;unique"`
-	CreatedAt      time.Time `gorm:"autoCreateTime"`
+	gorm.Model
+
+	ID             uint   `gorm:"primaryKey;autoIncrement"`
+	DocumentNumber string `gorm:"index;unique"`
 }
 
 func (a *Account) TableName() string {
