@@ -7,6 +7,7 @@ import (
 
 	driver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type PostgresStorage struct {
@@ -38,6 +39,10 @@ func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, erro
 	}, nil
 }
 
+func (ps *PostgresStorage) runSeed() error {
+	return ps.db.Debug().Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(OperationTypeSeedData, len(OperationTypeSeedData)).Error
+}
+
 type NewStorageOptions struct {
 	Host         string
 	User         string
@@ -62,9 +67,16 @@ func NewStorage(opts NewStorageOptions) (*PostgresStorage, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&Account{}); err != nil {
+	if err := db.AutoMigrate(&Account{}, &OperationType{}); err != nil {
 		return nil, err
 	}
 
-	return &PostgresStorage{db}, nil
+	ps := &PostgresStorage{db}
+
+	// Reason which make me to do seed on my own hand: https://github.com/go-gorm/gorm/issues/5339
+	if err := ps.runSeed(); err != nil {
+		return nil, err
+	}
+
+	return ps, nil
 }
