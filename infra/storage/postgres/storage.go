@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"errors"
 	"fmt"
 	"github/guiferpa/bank/domain/account"
 
@@ -14,15 +13,6 @@ type PostgresStorage struct {
 }
 
 func (ps *PostgresStorage) CreateAccount(opts account.CreateAccountOptions) (uint, error) {
-	var count int64
-	if err := ps.db.Find(&Account{}).Count(&count).Error; err != nil {
-		return 0, err
-	}
-
-	if count > 0 {
-		return 0, errors.New("account already exists")
-	}
-
 	model := &Account{DocumentNumber: opts.DocumentNumber}
 	if err := ps.db.Create(model).Error; err != nil {
 		return 0, err
