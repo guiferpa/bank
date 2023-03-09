@@ -1,11 +1,14 @@
 package postgres
 
-import "time"
+import (
+	"gorm.io/gorm"
+)
 
 type OperationType struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement"`
-	Description string    `gorm:"size:128"`
-	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	gorm.Model
+
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Description string `gorm:"size:128"`
 }
 
 func (ot *OperationType) TableName() string {
