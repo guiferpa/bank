@@ -95,3 +95,86 @@ func TestCreateAccount(t *testing.T) {
 		}
 	}()
 }
+
+func TestGetAccountByID(t *testing.T) {
+	env, err := infratest.NewEnvironment()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	ctx := context.Background()
+
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", []string{
+		"POSTGRES_PASSWORD=Pa$$w0rd",
+		"POSTGRES_DB=infra",
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	newStorageOptions := NewStorageOptions{
+		Host:         "localhost",
+		User:         "postgres",
+		Password:     "Pa$$w0rd",
+		DatabaseName: "infra",
+		Port:         "5432",
+	}
+	client, err := NewStorage(newStorageOptions)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	suite := []struct {
+		Describe string
+		Spec     func(t *testing.T)
+	}{
+		{
+			Describe: "Got successful",
+			Spec: func(t *testing.T) {
+				documentNumber := "42"
+				data := Account{DocumentNumber: documentNumber}
+				if err := client.db.Create(&data).Error; err != nil {
+					t.Error(err)
+					return
+				}
+
+				acc, err := client.GetAccountByID(data.ID)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				if got, expected := acc.DocumentNumber, documentNumber; got != expected {
+					t.Errorf("unexpected DocumentNumber, got: %s, expected: %s", got, expected)
+					return
+				}
+			},
+		},
+		{
+			Describe: "Not found",
+			Spec: func(t *testing.T) {
+				_, err := client.GetAccountByID(2)
+				if _, ok := err.(*account.StorageRepositoryGetAccountByIDError); !ok {
+					t.Errorf("unexpected value for error, got: %v", err)
+					return
+				}
+			},
+		},
+	}
+
+	for _, s := range suite {
+		t.Run(s.Describe, s.Spec)
+	}
+
+	defer func() {
+		if err := env.KillContainer(ctx, containerID); err != nil {
+			t.Error(err)
+			return
+		}
+	}()
+}
