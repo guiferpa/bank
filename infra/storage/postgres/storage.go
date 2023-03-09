@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"fmt"
 	"github/guiferpa/bank/domain/account"
 
@@ -19,6 +20,22 @@ func (ps *PostgresStorage) CreateAccount(opts account.CreateAccountOptions) (uin
 	}
 
 	return model.ID, nil
+}
+
+func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, error) {
+	var dest Account
+	if err := ps.db.Select("*").Where("id = ?", accountID).First(&dest).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return account.Account{}, account.NewStorageRepositoryGetAccountByIDError("account not found")
+		}
+
+		return account.Account{}, err
+	}
+
+	return account.Account{
+		ID:             dest.ID,
+		DocumentNumber: dest.DocumentNumber,
+	}, nil
 }
 
 type NewStorageOptions struct {
