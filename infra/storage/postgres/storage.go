@@ -39,6 +39,20 @@ func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, erro
 	}, nil
 }
 
+func (ps *PostgresStorage) CreateTransaction(opts account.CreateTransactionOptions) (uint, error) {
+	model := &AccountTransaction{
+		AccountID:       opts.AccountID,
+		OperationTypeID: opts.OperationTypeID,
+		Amount:          opts.Amount,
+		EventDate:       opts.EventDate,
+	}
+	if err := ps.db.Create(&model).Error; err != nil {
+		return 0, err
+	}
+
+	return model.ID, nil
+}
+
 func (ps *PostgresStorage) runSeed() error {
 	return ps.db.Debug().Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(OperationTypeSeedData, len(OperationTypeSeedData)).Error
 }
@@ -67,7 +81,7 @@ func NewStorage(opts NewStorageOptions) (*PostgresStorage, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&Account{}, &OperationType{}); err != nil {
+	if err := db.AutoMigrate(&Account{}, &OperationType{}, &AccountTransaction{}); err != nil {
 		return nil, err
 	}
 
