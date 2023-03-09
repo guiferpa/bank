@@ -9,18 +9,18 @@ type CreateAccountOptions struct {
 type CreateTransactionOptions struct {
 	AccountID       uint
 	OperationTypeID uint
-	Amount          uint
+	Amount          int64
 	EventDate       time.Time
 }
 
 type StorageRepository interface {
 	CreateAccount(CreateAccountOptions) (uint, error)
-	CreateTransaction(CreateTransactionOptions) (uint, error)
 	GetAccountByID(uint) (Account, error)
+	CreateTransaction(CreateTransactionOptions) (uint, error)
 }
 
 type UseCase interface {
 	CreateAccount(CreateAccountOptions) (uint, error)
-	CreateTransaction(CreateTransactionOptions) (uint, error)
 	GetAccountByID(uint) (Account, error)
+	CreateTransaction(CreateTransactionOptions) (uint, error)
 }
