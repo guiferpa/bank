@@ -9,6 +9,100 @@ import (
 	"github/guiferpa/bank/infra/infratest"
 )
 
+func TestRunSeed(t *testing.T) {
+	env, err := infratest.NewEnvironment()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	ctx := context.Background()
+
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", []string{
+		"POSTGRES_PASSWORD=Pa$$w0rd",
+		"POSTGRES_DB=infra",
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	newStorageOptions := NewStorageOptions{
+		Host:         "localhost",
+		User:         "postgres",
+		Password:     "Pa$$w0rd",
+		DatabaseName: "infra",
+		Port:         "5432",
+	}
+
+	suite := []struct {
+		Describe string
+		Spec     func(t *testing.T)
+	}{
+		{
+			Describe: "Seed done successful",
+			Spec: func(t *testing.T) {
+				client, err := NewStorage(newStorageOptions)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				dest := make([]OperationType, 0)
+				if err := client.db.Select("*").Find(&dest).Error; err != nil {
+					t.Error(err)
+					return
+				}
+
+				if got, expected := len(dest), len(OperationTypeSeedData); got != expected {
+					t.Errorf("unexpected value for find in operation_types table, got count: %v, expected count: %v", got, expected)
+					return
+				}
+			},
+		},
+		{
+			Describe: "Seed duplicated ignored sucessful",
+			Spec: func(t *testing.T) {
+				_, err := NewStorage(newStorageOptions)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				client, err := NewStorage(newStorageOptions)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				dest := make([]OperationType, 0)
+				if err := client.db.Select("*").Find(&dest).Error; err != nil {
+					t.Error(err)
+					return
+				}
+
+				if got, expected := len(dest), len(OperationTypeSeedData); got != expected {
+					t.Errorf("unexpected value for find in operation_types table, got count: %v, expected count: %v", got, expected)
+					return
+				}
+			},
+		},
+	}
+
+	for _, s := range suite {
+		t.Run(s.Describe, s.Spec)
+	}
+
+	defer func() {
+		if err := env.KillContainer(ctx, containerID); err != nil {
+			t.Error(err)
+			return
+		}
+	}()
+}
+
 func TestCreateAccount(t *testing.T) {
 	env, err := infratest.NewEnvironment()
 	if err != nil {
