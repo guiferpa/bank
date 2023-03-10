@@ -1,6 +1,14 @@
 package account
 
+type ErrorCode string
+
+const (
+	UseCaseDuplicatedAccountErrorCode ErrorCode = "domain.1"
+	UseCaseUnknownErrorCode           ErrorCode = "domain.2"
+)
+
 type UseCaseCreateAccountError struct {
+	Code    ErrorCode
 	Message string
 }
 
@@ -8,23 +16,16 @@ func (err *UseCaseCreateAccountError) Error() string {
 	return err.Message
 }
 
-func NewUseCaseCreateAccountError(message string) *UseCaseCreateAccountError {
-	return &UseCaseCreateAccountError{message}
+func NewUseCaseCreateAccountError(errorCode ErrorCode, message string) *UseCaseCreateAccountError {
+	return &UseCaseCreateAccountError{errorCode, message}
 }
 
-type StorageRepositoryCreateAccountError struct {
-	Message string
-}
-
-func (err *StorageRepositoryCreateAccountError) Error() string {
-	return err.Message
-}
-
-func NewStorageRepositoryCreateAccountError(message string) *StorageRepositoryCreateAccountError {
-	return &StorageRepositoryCreateAccountError{message}
-}
+const (
+	StorageAccountNotFoundErrorCode ErrorCode = "infra.1"
+)
 
 type StorageRepositoryGetAccountByIDError struct {
+	Code    ErrorCode
 	Message string
 }
 
@@ -32,6 +33,6 @@ func (err *StorageRepositoryGetAccountByIDError) Error() string {
 	return err.Message
 }
 
-func NewStorageRepositoryGetAccountByIDError(message string) *StorageRepositoryGetAccountByIDError {
-	return &StorageRepositoryGetAccountByIDError{message}
+func NewStorageRepositoryGetAccountByIDError(errorCode ErrorCode, message string) *StorageRepositoryGetAccountByIDError {
+	return &StorageRepositoryGetAccountByIDError{errorCode, message}
 }
