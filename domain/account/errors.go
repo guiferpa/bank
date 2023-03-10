@@ -3,8 +3,10 @@ package account
 type ErrorCode string
 
 const (
-	UseCaseDuplicatedAccountErrorCode ErrorCode = "domain.1"
-	UseCaseUnknownErrorCode           ErrorCode = "domain.2"
+	UseCaseCreateAccountDuplicatedAccountErrorCode ErrorCode = "domain.1"
+	UseCaseCreateAccountUnknownErrorCode           ErrorCode = "domain.2"
+
+	UseCaseGetAccountByIDUnknownErrorCode ErrorCode = "domain.3"
 )
 
 type UseCaseCreateAccountError struct {
@@ -18,6 +20,19 @@ func (err *UseCaseCreateAccountError) Error() string {
 
 func NewUseCaseCreateAccountError(errorCode ErrorCode, message string) *UseCaseCreateAccountError {
 	return &UseCaseCreateAccountError{errorCode, message}
+}
+
+type UseCaseGetAccountByIDError struct {
+	Code    ErrorCode
+	Message string
+}
+
+func (err *UseCaseGetAccountByIDError) Error() string {
+	return err.Message
+}
+
+func NewUseCaseGetAccountByIDError(errorCode ErrorCode, message string) *UseCaseGetAccountByIDError {
+	return &UseCaseGetAccountByIDError{errorCode, message}
 }
 
 const (
