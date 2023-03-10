@@ -9,6 +9,7 @@ type MockStorageRepository struct {
 	NCalledHasAccountByDocumentNumber int
 	DocumentNumberResult              string
 	HasAccountByDocumentNumberResult  bool
+	GetAccountByIDErrorResult         error
 }
 
 func (msr *MockStorageRepository) CreateAccount(opts CreateAccountOptions) (uint, error) {
@@ -24,7 +25,7 @@ func (msr *MockStorageRepository) CreateTransaction(opts CreateTransactionOption
 
 func (msr *MockStorageRepository) GetAccountByID(accountID uint) (Account, error) {
 	msr.NCalledGetAccountByID += 1
-	return Account{}, nil
+	return Account{}, msr.GetAccountByIDErrorResult
 }
 
 func (msr *MockStorageRepository) HasAccountByDocumentNumber(documentNumber string) (bool, error) {
@@ -105,7 +106,7 @@ func TestCreateAccountWithDocumentNumberAlreadyRegistered(t *testing.T) {
 			return
 		}
 
-		if got, expected := cerr.Code, UseCaseDuplicatedAccountErrorCode; got != expected {
+		if got, expected := cerr.Code, UseCaseCreateAccountDuplicatedAccountErrorCode; got != expected {
 			t.Errorf("unexpected error code, got: %v, expected: %v", got, expected)
 			return
 		}
@@ -160,6 +161,42 @@ func TestGetAccountById(t *testing.T) {
 		accountID := uint(20)
 		if _, err := svc.GetAccountByID(accountID); err != nil {
 			t.Error(err)
+			return
+		}
+
+		if got, expected := mock.NCalledGetAccountByID, s.ExpectedNCalledGetAccountByID; got != expected {
+			t.Errorf("unexpected N called GetAccountByID, got: %v, expected: %v", got, expected)
+			return
+		}
+	}
+}
+
+func TestGetAccountByIdWithNotFound(t *testing.T) {
+	suite := []struct {
+		ExpectedNCalledGetAccountByID int
+		GetAccountByIDErrorResult     error
+	}{
+		{
+			ExpectedNCalledGetAccountByID: 1,
+			GetAccountByIDErrorResult:     NewStorageRepositoryGetAccountByIDError(StorageAccountNotFoundErrorCode, "account not found"),
+		},
+	}
+
+	for _, s := range suite {
+		mock := &MockStorageRepository{
+			GetAccountByIDErrorResult: s.GetAccountByIDErrorResult,
+		}
+		svc := &UseCaseService{storage: mock}
+
+		_, err := svc.GetAccountByID(20)
+		cerr, ok := err.(*StorageRepositoryGetAccountByIDError)
+		if !ok {
+			t.Error("unexpected error")
+			return
+		}
+
+		if got, expected := cerr.Code, StorageAccountNotFoundErrorCode; got != expected {
+			t.Errorf("unexpected error code, got: %v, expected: %v", got, expected)
 			return
 		}
 
