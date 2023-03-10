@@ -16,6 +16,7 @@ type CreateTransactionOptions struct {
 type StorageRepository interface {
 	CreateAccount(CreateAccountOptions) (uint, error)
 	GetAccountByID(uint) (Account, error)
+	HasAccountByDocumentNumber(string) (bool, error)
 	CreateTransaction(CreateTransactionOptions) (uint, error)
 }
 

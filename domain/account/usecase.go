@@ -5,12 +5,16 @@ type UseCaseService struct {
 }
 
 func (ucs *UseCaseService) CreateAccount(opts CreateAccountOptions) (uint, error) {
-	id, err := ucs.storage.CreateAccount(opts)
+	has, err := ucs.storage.HasAccountByDocumentNumber(opts.DocumentNumber)
 	if err != nil {
-		return 0, NewUseCaseCreateAccountError(err.Error())
+		return 0, NewUseCaseCreateAccountError(UseCaseUnknownErrorCode, err.Error())
 	}
 
-	return id, nil
+	if has {
+		return 0, NewUseCaseCreateAccountError(UseCaseDuplicatedAccountErrorCode, "account already exists")
+	}
+
+	return ucs.storage.CreateAccount(opts)
 }
 
 func (ucs *UseCaseService) CreateTransaction(opts CreateTransactionOptions) (uint, error) {

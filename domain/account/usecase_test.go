@@ -3,10 +3,12 @@ package account
 import "testing"
 
 type MockStorageRepository struct {
-	NCalledCreateAccount      int
-	NCalledCreatedTransaction int
-	NCalledGetAccountByID     int
-	DocumentNumberResult      string
+	NCalledCreateAccount              int
+	NCalledCreatedTransaction         int
+	NCalledGetAccountByID             int
+	NCalledHasAccountByDocumentNumber int
+	DocumentNumberResult              string
+	HasAccountByDocumentNumberResult  bool
 }
 
 func (msr *MockStorageRepository) CreateAccount(opts CreateAccountOptions) (uint, error) {
@@ -25,13 +27,24 @@ func (msr *MockStorageRepository) GetAccountByID(accountID uint) (Account, error
 	return Account{}, nil
 }
 
+func (msr *MockStorageRepository) HasAccountByDocumentNumber(documentNumber string) (bool, error) {
+	msr.NCalledHasAccountByDocumentNumber += 1
+	return msr.HasAccountByDocumentNumberResult, nil
+}
+
 func TestCreateAccount(t *testing.T) {
 	suite := []struct {
-		DocumentNumber               string
-		ExpectedNCalledCreateAccount int
-		ExpectedDocumentNumberResult string
+		DocumentNumber                            string
+		ExpectedNCalledHasAccountByDocumentNumber int
+		ExpectedNCalledCreateAccount              int
+		ExpectedDocumentNumberResult              string
 	}{
-		{DocumentNumber: "123", ExpectedNCalledCreateAccount: 1, ExpectedDocumentNumberResult: "123"},
+		{
+			DocumentNumber: "123",
+			ExpectedNCalledHasAccountByDocumentNumber: 1,
+			ExpectedNCalledCreateAccount:              1,
+			ExpectedDocumentNumberResult:              "123",
+		},
 	}
 
 	for _, s := range suite {
@@ -44,6 +57,11 @@ func TestCreateAccount(t *testing.T) {
 			return
 		}
 
+		if got, expected := mock.NCalledHasAccountByDocumentNumber, s.ExpectedNCalledHasAccountByDocumentNumber; got != expected {
+			t.Errorf("unexpected N called HasAccountByDocumentNumber, got: %v, expected: %v", got, expected)
+			return
+		}
+
 		if got, expected := mock.NCalledCreateAccount, s.ExpectedNCalledCreateAccount; got != expected {
 			t.Errorf("unexpected N called CreateAccount, got: %v, expected: %v", got, expected)
 			return
@@ -51,6 +69,54 @@ func TestCreateAccount(t *testing.T) {
 
 		if got, expected := mock.DocumentNumberResult, s.ExpectedDocumentNumberResult; got != expected {
 			t.Errorf("unexpected document number, got: %v, expected: %v", got, expected)
+			return
+		}
+	}
+}
+
+func TestCreateAccountWithDocumentNumberAlreadyRegistered(t *testing.T) {
+	suite := []struct {
+		DocumentNumber                            string
+		ExpectedNCalledHasAccountByDocumentNumber int
+		ExpectedNCalledCreateAccount              int
+		HasAccountByDocumentNumberResult          bool
+	}{
+		{
+			DocumentNumber: "123",
+			ExpectedNCalledHasAccountByDocumentNumber: 1,
+			ExpectedNCalledCreateAccount:              0,
+			HasAccountByDocumentNumberResult:          true,
+		},
+	}
+
+	for _, s := range suite {
+		mock := &MockStorageRepository{
+			HasAccountByDocumentNumberResult: s.HasAccountByDocumentNumberResult,
+		}
+		svc := &UseCaseService{storage: mock}
+
+		opts := CreateAccountOptions{DocumentNumber: s.DocumentNumber}
+		_, err := svc.CreateAccount(opts)
+
+		cerr, ok := err.(*UseCaseCreateAccountError)
+
+		if !ok {
+			t.Error("unexpected error")
+			return
+		}
+
+		if got, expected := cerr.Code, UseCaseDuplicatedAccountErrorCode; got != expected {
+			t.Errorf("unexpected error code, got: %v, expected: %v", got, expected)
+			return
+		}
+
+		if got, expected := mock.NCalledHasAccountByDocumentNumber, s.ExpectedNCalledHasAccountByDocumentNumber; got != expected {
+			t.Errorf("unexpected N called HasAccountByDocumentNumber, got: %v, expected: %v", got, expected)
+			return
+		}
+
+		if got, expected := mock.NCalledCreateAccount, s.ExpectedNCalledCreateAccount; got != expected {
+			t.Errorf("unexpected N called CreateAccount, got: %v, expected: %v", got, expected)
 			return
 		}
 	}
