@@ -17,7 +17,7 @@ type PostgresStorage struct {
 func (ps *PostgresStorage) CreateAccount(opts account.CreateAccountOptions) (uint, error) {
 	model := &Account{DocumentNumber: opts.DocumentNumber}
 	if err := ps.db.Create(model).Error; err != nil {
-		return 0, err
+		return 0, account.NewInfraError(account.InfraUnknownError, err.Error())
 	}
 
 	return model.ID, nil
@@ -27,10 +27,10 @@ func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, erro
 	var dest Account
 	if err := ps.db.Select("*").Where("id = ?", accountID).First(&dest).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return account.Account{}, account.NewStorageRepositoryGetAccountByIDError(account.StorageAccountNotFoundErrorCode, "account not found")
+			return account.Account{}, account.NewInfraError(account.InfraAccountNotFoundErrorCode, "account not found")
 		}
 
-		return account.Account{}, err
+		return account.Account{}, account.NewInfraError(account.InfraUnknownError, err.Error())
 	}
 
 	return account.Account{
@@ -42,7 +42,7 @@ func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, erro
 func (ps *PostgresStorage) HasAccountByDocumentNumber(documentNumber string) (bool, error) {
 	var dest int64
 	if err := ps.db.Model(&Account{}).Select("*").Where("document_number = ?", documentNumber).Count(&dest).Error; err != nil {
-		return false, err
+		return false, account.NewInfraError(account.InfraUnknownError, err.Error())
 	}
 
 	return dest > 0, nil
@@ -56,7 +56,7 @@ func (ps *PostgresStorage) CreateTransaction(opts account.CreateTransactionOptio
 		EventDate:       opts.EventDate,
 	}
 	if err := ps.db.Create(&model).Error; err != nil {
-		return 0, err
+		return 0, account.NewInfraError(account.InfraUnknownError, err.Error())
 	}
 
 	return model.ID, nil

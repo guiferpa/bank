@@ -253,7 +253,7 @@ func TestGetAccountByID(t *testing.T) {
 			Describe: "Not found",
 			Spec: func(t *testing.T) {
 				_, err := client.GetAccountByID(2)
-				if _, ok := err.(*account.StorageRepositoryGetAccountByIDError); !ok {
+				if _, ok := err.(*account.InfraError); !ok {
 					t.Errorf("unexpected value for error, got: %v", err)
 					return
 				}

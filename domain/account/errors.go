@@ -3,64 +3,61 @@ package account
 type ErrorCode string
 
 const (
-	UseCaseCreateAccountDuplicatedAccountErrorCode ErrorCode = "domain.1"
-	UseCaseCreateAccountUnknownErrorCode           ErrorCode = "domain.2"
-	UseCaseGetAccountByIDUnknownErrorCode          ErrorCode = "domain.3"
-	UseCaseCreateTransactionUnknownErrorCode       ErrorCode = "domain.4"
+	HandlerUnknwonErrorCode        ErrorCode = "handler.1"
+	HandlerInvalidPayloadErrorCode ErrorCode = "handler.2"
+	HandlerBadRequestErrorCode     ErrorCode = "handler.3"
 )
 
-type UseCaseCreateAccountError struct {
-	Code    ErrorCode
-	Message string
+type HandlerError struct {
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
 }
 
-func (err *UseCaseCreateAccountError) Error() string {
-	return err.Message
+func NewHandlerError(errorCode ErrorCode, message string) *HandlerError {
+	return &HandlerError{errorCode, message}
 }
 
-func NewUseCaseCreateAccountError(errorCode ErrorCode, message string) *UseCaseCreateAccountError {
-	return &UseCaseCreateAccountError{errorCode, message}
+type HandlerInvalidPayloadError struct {
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
+	Field   string    `json:"field,omitempty"`
 }
 
-type UseCaseGetAccountByIDError struct {
-	Code    ErrorCode
-	Message string
-}
-
-func (err *UseCaseGetAccountByIDError) Error() string {
-	return err.Message
-}
-
-func NewUseCaseGetAccountByIDError(errorCode ErrorCode, message string) *UseCaseGetAccountByIDError {
-	return &UseCaseGetAccountByIDError{errorCode, message}
-}
-
-type UseCaseCreateTransactionError struct {
-	Code    ErrorCode
-	Message string
-}
-
-func (err *UseCaseCreateTransactionError) Error() string {
-	return err.Message
-}
-
-func NewUseCaseCreateTransactionError(errorCode ErrorCode, message string) *UseCaseCreateTransactionError {
-	return &UseCaseCreateTransactionError{errorCode, message}
+func NewHandlerInvalidPayloadError(errorCode ErrorCode, message, field string) *HandlerInvalidPayloadError {
+	return &HandlerInvalidPayloadError{errorCode, message, field}
 }
 
 const (
-	StorageAccountNotFoundErrorCode ErrorCode = "infra.1"
+	DomainAccountAlreadyExistsErrorCode ErrorCode = "domain.1"
 )
 
-type StorageRepositoryGetAccountByIDError struct {
-	Code    ErrorCode
-	Message string
+type DomainError struct {
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
 }
 
-func (err *StorageRepositoryGetAccountByIDError) Error() string {
+func (err *DomainError) Error() string {
 	return err.Message
 }
 
-func NewStorageRepositoryGetAccountByIDError(errorCode ErrorCode, message string) *StorageRepositoryGetAccountByIDError {
-	return &StorageRepositoryGetAccountByIDError{errorCode, message}
+func NewDomainError(errorCode ErrorCode, message string) *DomainError {
+	return &DomainError{errorCode, message}
+}
+
+const (
+	InfraUnknownError             ErrorCode = "infra.1"
+	InfraAccountNotFoundErrorCode ErrorCode = "infra.2"
+)
+
+type InfraError struct {
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
+}
+
+func (err *InfraError) Error() string {
+	return err.Message
+}
+
+func NewInfraError(errorCode ErrorCode, message string) *InfraError {
+	return &InfraError{errorCode, message}
 }

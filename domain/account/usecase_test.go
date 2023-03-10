@@ -99,14 +99,14 @@ func TestCreateAccountWithDocumentNumberAlreadyRegistered(t *testing.T) {
 		opts := CreateAccountOptions{DocumentNumber: s.DocumentNumber}
 		_, err := svc.CreateAccount(opts)
 
-		cerr, ok := err.(*UseCaseCreateAccountError)
+		cerr, ok := err.(*DomainError)
 
 		if !ok {
 			t.Error("unexpected error")
 			return
 		}
 
-		if got, expected := cerr.Code, UseCaseCreateAccountDuplicatedAccountErrorCode; got != expected {
+		if got, expected := cerr.Code, DomainAccountAlreadyExistsErrorCode; got != expected {
 			t.Errorf("unexpected error code, got: %v, expected: %v", got, expected)
 			return
 		}
@@ -187,7 +187,7 @@ func TestGetAccountByIdWithNotFound(t *testing.T) {
 	}{
 		{
 			ExpectedNCalledGetAccountByID: 1,
-			GetAccountByIDErrorResult:     NewStorageRepositoryGetAccountByIDError(StorageAccountNotFoundErrorCode, "account not found"),
+			GetAccountByIDErrorResult:     NewInfraError(InfraAccountNotFoundErrorCode, "account not found"),
 		},
 	}
 
@@ -198,13 +198,13 @@ func TestGetAccountByIdWithNotFound(t *testing.T) {
 		svc := &UseCaseService{storage: mock}
 
 		_, err := svc.GetAccountByID(20)
-		cerr, ok := err.(*StorageRepositoryGetAccountByIDError)
+		cerr, ok := err.(*InfraError)
 		if !ok {
 			t.Error("unexpected error")
 			return
 		}
 
-		if got, expected := cerr.Code, StorageAccountNotFoundErrorCode; got != expected {
+		if got, expected := cerr.Code, InfraAccountNotFoundErrorCode; got != expected {
 			t.Errorf("unexpected error code, got: %v, expected: %v", got, expected)
 			return
 		}
