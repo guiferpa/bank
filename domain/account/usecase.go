@@ -23,7 +23,20 @@ func (ucs *UseCaseService) CreateAccount(opts CreateAccountOptions) (uint, error
 }
 
 func (ucs *UseCaseService) CreateTransaction(opts CreateTransactionOptions) (uint, error) {
-	return ucs.storage.CreateTransaction(opts)
+	if _, err := ucs.storage.GetAccountByID(opts.AccountID); err != nil {
+		if _, ok := err.(*StorageRepositoryGetAccountByIDError); ok {
+			return 0, err
+		}
+
+		return 0, NewUseCaseCreateTransactionError(UseCaseCreateTransactionUnknownErrorCode, err.Error())
+	}
+
+	transID, err := ucs.storage.CreateTransaction(opts)
+	if err != nil {
+		return 0, NewUseCaseCreateTransactionError(UseCaseCreateTransactionUnknownErrorCode, err.Error())
+	}
+
+	return transID, nil
 }
 
 func (ucs *UseCaseService) GetAccountByID(accountID uint) (Account, error) {

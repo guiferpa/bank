@@ -5,8 +5,8 @@ type ErrorCode string
 const (
 	UseCaseCreateAccountDuplicatedAccountErrorCode ErrorCode = "domain.1"
 	UseCaseCreateAccountUnknownErrorCode           ErrorCode = "domain.2"
-
-	UseCaseGetAccountByIDUnknownErrorCode ErrorCode = "domain.3"
+	UseCaseGetAccountByIDUnknownErrorCode          ErrorCode = "domain.3"
+	UseCaseCreateTransactionUnknownErrorCode       ErrorCode = "domain.4"
 )
 
 type UseCaseCreateAccountError struct {
@@ -33,6 +33,19 @@ func (err *UseCaseGetAccountByIDError) Error() string {
 
 func NewUseCaseGetAccountByIDError(errorCode ErrorCode, message string) *UseCaseGetAccountByIDError {
 	return &UseCaseGetAccountByIDError{errorCode, message}
+}
+
+type UseCaseCreateTransactionError struct {
+	Code    ErrorCode
+	Message string
+}
+
+func (err *UseCaseCreateTransactionError) Error() string {
+	return err.Message
+}
+
+func NewUseCaseCreateTransactionError(errorCode ErrorCode, message string) *UseCaseCreateTransactionError {
+	return &UseCaseCreateTransactionError{errorCode, message}
 }
 
 const (
