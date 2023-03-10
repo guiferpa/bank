@@ -1,0 +1,38 @@
+version: "3.7"
+
+networks:
+  principal:
+    driver: bridge
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: bank-api
+      POSTGRES_PASSWORD: pwd
+    networks:
+      - principal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USER: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: bank-api
+      DATABASE_PASSWORD: pwd
+      PORT: 8080
+    networks:
+      - principal
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
