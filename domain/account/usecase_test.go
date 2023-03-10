@@ -125,9 +125,13 @@ func TestCreateAccountWithDocumentNumberAlreadyRegistered(t *testing.T) {
 
 func TestCreateTransaction(t *testing.T) {
 	suite := []struct {
+		ExpectedNCalledGetAccountByID    int
 		ExpectedNCalledCreateTransaction int
 	}{
-		{ExpectedNCalledCreateTransaction: 1},
+		{
+			ExpectedNCalledGetAccountByID:    1,
+			ExpectedNCalledCreateTransaction: 1,
+		},
 	}
 
 	for _, s := range suite {
@@ -137,6 +141,11 @@ func TestCreateTransaction(t *testing.T) {
 		opts := CreateTransactionOptions{}
 		if _, err := svc.CreateTransaction(opts); err != nil {
 			t.Error(err)
+			return
+		}
+
+		if got, expected := mock.NCalledGetAccountByID, s.ExpectedNCalledGetAccountByID; got != expected {
+			t.Errorf("unexpected N called GetAccountByID, got: %v, expected: %v", got, expected)
 			return
 		}
 
