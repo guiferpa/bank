@@ -13,14 +13,14 @@ type Environment struct {
 	client *client.Client
 }
 
-func (e *Environment) RunContainer(ctx context.Context, image, port string, env []string) (string, error) {
+func (e *Environment) RunContainer(ctx context.Context, image, port, bindingPort string, env []string) (string, error) {
 	containerConfig := &container.Config{
 		Image:        image,
-		ExposedPorts: nat.PortSet{nat.Port(port): struct{}{}},
+		ExposedPorts: nat.PortSet{nat.Port(bindingPort): struct{}{}},
 		Env:          env,
 	}
 	containerHostConfig := &container.HostConfig{
-		PortBindings: map[nat.Port][]nat.PortBinding{nat.Port(port): {{HostIP: "127.0.0.1", HostPort: port}}},
+		PortBindings: map[nat.Port][]nat.PortBinding{nat.Port(bindingPort): {{HostIP: "127.0.0.1", HostPort: port}}},
 	}
 	resp, err := e.client.ContainerCreate(ctx, containerConfig, containerHostConfig, nil, nil, "")
 	if err != nil {
