@@ -51,3 +51,7 @@ func (ucs *UseCaseService) GetAccountByID(accountID uint) (Account, error) {
 
 	return acc, nil
 }
+
+func NewUseCaseService(storage StorageRepository) *UseCaseService {
+	return &UseCaseService{storage}
+}
