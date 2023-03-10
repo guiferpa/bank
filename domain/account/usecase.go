@@ -14,7 +14,12 @@ func (ucs *UseCaseService) CreateAccount(opts CreateAccountOptions) (uint, error
 		return 0, NewUseCaseCreateAccountError(UseCaseDuplicatedAccountErrorCode, "account already exists")
 	}
 
-	return ucs.storage.CreateAccount(opts)
+	accountID, err := ucs.storage.CreateAccount(opts)
+	if err != nil {
+		return 0, NewUseCaseCreateAccountError(UseCaseUnknownErrorCode, err.Error())
+	}
+
+	return accountID, nil
 }
 
 func (ucs *UseCaseService) CreateTransaction(opts CreateTransactionOptions) (uint, error) {
