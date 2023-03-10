@@ -27,7 +27,7 @@ func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, erro
 	var dest Account
 	if err := ps.db.Select("*").Where("id = ?", accountID).First(&dest).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return account.Account{}, account.NewStorageRepositoryGetAccountByIDError("account not found")
+			return account.Account{}, account.NewStorageRepositoryGetAccountByIDError(account.StorageAccountNotFoundErrorCode, "account not found")
 		}
 
 		return account.Account{}, err
@@ -37,6 +37,15 @@ func (ps *PostgresStorage) GetAccountByID(accountID uint) (account.Account, erro
 		ID:             dest.ID,
 		DocumentNumber: dest.DocumentNumber,
 	}, nil
+}
+
+func (ps *PostgresStorage) HasAccountByDocumentNumber(documentNumber string) (bool, error) {
+	var dest int64
+	if err := ps.db.Model(&Account{}).Select("*").Where("document_number = ?", documentNumber).Count(&dest).Error; err != nil {
+		return false, err
+	}
+
+	return dest > 0, nil
 }
 
 func (ps *PostgresStorage) CreateTransaction(opts account.CreateTransactionOptions) (uint, error) {

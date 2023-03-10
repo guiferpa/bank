@@ -18,7 +18,7 @@ func TestRunSeed(t *testing.T) {
 
 	ctx := context.Background()
 
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", []string{
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", "5432", []string{
 		"POSTGRES_PASSWORD=Pa$$w0rd",
 		"POSTGRES_DB=infra",
 	})
@@ -26,8 +26,6 @@ func TestRunSeed(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
-	time.Sleep(2 * time.Second)
 
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",
@@ -91,6 +89,8 @@ func TestRunSeed(t *testing.T) {
 		},
 	}
 
+	time.Sleep(2 * time.Second)
+
 	for _, s := range suite {
 		t.Run(s.Describe, s.Spec)
 	}
@@ -112,7 +112,7 @@ func TestCreateAccount(t *testing.T) {
 
 	ctx := context.Background()
 
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", []string{
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5433", "5432", []string{
 		"POSTGRES_PASSWORD=Pa$$w0rd",
 		"POSTGRES_DB=infra",
 	})
@@ -128,7 +128,7 @@ func TestCreateAccount(t *testing.T) {
 		User:         "postgres",
 		Password:     "Pa$$w0rd",
 		DatabaseName: "infra",
-		Port:         "5432",
+		Port:         "5433",
 	}
 	client, err := NewStorage(newStorageOptions)
 	if err != nil {
@@ -199,7 +199,7 @@ func TestGetAccountByID(t *testing.T) {
 
 	ctx := context.Background()
 
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", []string{
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5434", "5432", []string{
 		"POSTGRES_PASSWORD=Pa$$w0rd",
 		"POSTGRES_DB=infra",
 	})
@@ -215,7 +215,7 @@ func TestGetAccountByID(t *testing.T) {
 		User:         "postgres",
 		Password:     "Pa$$w0rd",
 		DatabaseName: "infra",
-		Port:         "5432",
+		Port:         "5434",
 	}
 	client, err := NewStorage(newStorageOptions)
 	if err != nil {
@@ -282,7 +282,7 @@ func TestCreateTransaction(t *testing.T) {
 
 	ctx := context.Background()
 
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5432", []string{
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5435", "5432", []string{
 		"POSTGRES_PASSWORD=Pa$$w0rd",
 		"POSTGRES_DB=infra",
 	})
@@ -298,7 +298,7 @@ func TestCreateTransaction(t *testing.T) {
 		User:         "postgres",
 		Password:     "Pa$$w0rd",
 		DatabaseName: "infra",
-		Port:         "5432",
+		Port:         "5435",
 	}
 	client, err := NewStorage(newStorageOptions)
 	if err != nil {
@@ -339,6 +339,99 @@ func TestCreateTransaction(t *testing.T) {
 
 				if got, expected := dest.Amount, transOptions.Amount; got != expected {
 					t.Errorf("unexpected transaction's Amount, got: %v, expected: %v", got, expected)
+					return
+				}
+			},
+		},
+	}
+
+	for _, s := range suite {
+		t.Run(s.Describe, s.Spec)
+	}
+
+	defer func() {
+		if err := env.KillContainer(ctx, containerID); err != nil {
+			t.Error(err)
+			return
+		}
+	}()
+}
+
+func TestHasAccountByDocumentNumber(t *testing.T) {
+	env, err := infratest.NewEnvironment()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	ctx := context.Background()
+
+	containerID, err := env.RunContainer(ctx, "postgres:14", "5436", "5432", []string{
+		"POSTGRES_PASSWORD=Pa$$w0rd",
+		"POSTGRES_DB=infra",
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	newStorageOptions := NewStorageOptions{
+		Host:         "localhost",
+		User:         "postgres",
+		Password:     "Pa$$w0rd",
+		DatabaseName: "infra",
+		Port:         "5436",
+	}
+	client, err := NewStorage(newStorageOptions)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	suite := []struct {
+		Describe string
+		Spec     func(t *testing.T)
+	}{
+		{
+			Describe: "Got successful",
+			Spec: func(t *testing.T) {
+				acc := &Account{DocumentNumber: "42"}
+				if err := client.db.Create(&acc).Error; err != nil {
+					t.Error(err)
+					return
+				}
+
+				has, err := client.HasAccountByDocumentNumber(acc.DocumentNumber)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				if got, expected := has, true; got != expected {
+					t.Errorf("unexpected value from HasAccountByDocumentNumber function, got: %v, expected: %v", got, expected)
+					return
+				}
+			},
+		},
+		{
+			Describe: "Got none successful",
+			Spec: func(t *testing.T) {
+				acc := &Account{DocumentNumber: "43"}
+				if err := client.db.Create(&acc).Error; err != nil {
+					t.Error(err)
+					return
+				}
+
+				has, err := client.HasAccountByDocumentNumber("44")
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				if got, expected := has, false; got != expected {
+					t.Errorf("unexpected value from HasAccountByDocumentNumber function, got: %v, expected: %v", got, expected)
 					return
 				}
 			},
