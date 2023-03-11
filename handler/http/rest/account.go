@@ -27,6 +27,8 @@ func CreateAccount(usecase account.UseCase) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body CreateAccountHTTPRequest
 		if err := render.DecodeJSON(r.Body, &body); err != nil {
+			render.Status(r, http.StatusBadRequest)
+
 			if err == io.EOF {
 				render.Respond(w, r, account.NewHandlerError(account.HandlerBadRequestErrorCode, "missing request body"))
 				return
@@ -48,6 +50,8 @@ func CreateAccount(usecase account.UseCase) http.HandlerFunc {
 		defer r.Body.Close()
 
 		if _, err := validator.Validate(body); err != nil {
+			render.Status(r, http.StatusUnprocessableEntity)
+
 			if cerr, ok := err.(*rule.ErrNotEmpty); ok {
 				render.Respond(w, r, account.NewHandlerInvalidPayloadError(account.HandlerInvalidPayloadErrorCode, cerr.Error(), cerr.Field))
 				return
@@ -62,9 +66,17 @@ func CreateAccount(usecase account.UseCase) http.HandlerFunc {
 		}
 		accountID, err := usecase.CreateAccount(options)
 		if err != nil {
+			render.Status(r, http.StatusInternalServerError)
+
+			if cerr, ok := err.(*account.DomainError); ok && cerr.Code == account.DomainAccountAlreadyExistsErrorCode {
+				render.Status(r, http.StatusConflict)
+			}
+
 			render.Respond(w, r, err)
 			return
 		}
+
+		render.Status(r, http.StatusCreated)
 
 		render.Respond(w, r, CreateAccountHTTPResponse{
 			ID:             accountID,
