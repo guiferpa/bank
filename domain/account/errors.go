@@ -24,6 +24,10 @@ type HandlerInvalidFieldError struct {
 	Field   string    `json:"field,omitempty"`
 }
 
+func (err *HandlerInvalidFieldError) Error() string {
+	return err.Message
+}
+
 func NewHandlerInvalidFieldError(errorCode ErrorCode, message, field string) *HandlerInvalidFieldError {
 	return &HandlerInvalidFieldError{errorCode, message, field}
 }

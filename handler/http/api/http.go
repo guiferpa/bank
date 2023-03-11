@@ -41,6 +41,7 @@ func NewHTTPHandler(usecase account.UseCase) http.Handler {
 		v1.Route("/accounts", func(r chi.Router) {
 			r.Post("/", CreateAccount(usecase))
 			r.With(httpin.NewInput(GetAccountByIDRequestParams{})).Get("/{id}", GetAccountByID(usecase))
+			r.Post("/transaction", CreateAccountTransaction(usecase))
 		})
 	})
 
