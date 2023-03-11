@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github/guiferpa/bank/domain/account"
-	"github/guiferpa/bank/handler/http/rest"
+	"github/guiferpa/bank/handler/http/api"
 	"github/guiferpa/bank/infra/storage/postgres"
 	"net/http"
 	"os"
@@ -21,7 +21,7 @@ func main() {
 		panic(err)
 	}
 	service := account.NewUseCaseService(storage)
-	handler := rest.NewHTTPHandler(service)
+	handler := api.NewHTTPHandler(service)
 
 	port := os.Getenv("PORT")
 	http.ListenAndServe(fmt.Sprintf(":%s", port), handler)
