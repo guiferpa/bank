@@ -13,11 +13,11 @@ import (
 	"github.com/guiferpa/gody/v2/rule"
 )
 
-type CreateAccountHTTPRequest struct {
+type CreateAccountRequestBody struct {
 	DocumentNumber string `json:"document_number" validate:"not_empty"`
 }
 
-type CreateAccountHTTPResponse struct {
+type CreateAccountResponseBody struct {
 	ID             uint   `json:"id"`
 	DocumentNumber string `json:"document_number"`
 }
@@ -26,7 +26,7 @@ func CreateAccount(usecase account.UseCase) http.HandlerFunc {
 	validator := gody.NewValidator()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var body CreateAccountHTTPRequest
+		var body CreateAccountRequestBody
 		if err := render.DecodeJSON(r.Body, &body); err != nil {
 			render.Status(r, http.StatusBadRequest)
 
@@ -79,7 +79,7 @@ func CreateAccount(usecase account.UseCase) http.HandlerFunc {
 
 		render.Status(r, http.StatusCreated)
 
-		render.Respond(w, r, CreateAccountHTTPResponse{
+		render.Respond(w, r, CreateAccountResponseBody{
 			ID:             accountID,
 			DocumentNumber: options.DocumentNumber,
 		})
