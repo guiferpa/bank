@@ -5,13 +5,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 )
-
-type Environment struct {
-	client *client.Client
-}
 
 func (e *Environment) RunContainer(ctx context.Context, image, port, bindingPort string, env []string) (string, error) {
 	containerConfig := &container.Config{
@@ -39,13 +34,4 @@ func (e *Environment) KillContainer(ctx context.Context, containerID string) err
 	}
 
 	return nil
-}
-
-func NewEnvironment() (*Environment, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, err
-	}
-
-	return &Environment{client: cli}, nil
 }
