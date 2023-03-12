@@ -1,12 +1,12 @@
 package log
 
 import (
+	"context"
 	"github/guiferpa/bank/domain/log"
 	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"golang.org/x/net/context"
 )
 
 type Logger struct {
