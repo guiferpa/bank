@@ -7,6 +7,7 @@ type MockStorageRepository struct {
 	NCalledCreatedTransaction         int
 	NCalledGetAccountByID             int
 	NCalledHasAccountByDocumentNumber int
+	NCalledHasOperationTypeByID       int
 	DocumentNumberResult              string
 	HasAccountByDocumentNumberResult  bool
 	GetAccountByIDErrorResult         error
@@ -31,6 +32,11 @@ func (msr *MockStorageRepository) GetAccountByID(accountID uint) (Account, error
 func (msr *MockStorageRepository) HasAccountByDocumentNumber(documentNumber string) (bool, error) {
 	msr.NCalledHasAccountByDocumentNumber += 1
 	return msr.HasAccountByDocumentNumberResult, nil
+}
+
+func (msr *MockStorageRepository) HasOperationTypeByID(operationTypeID uint) (bool, error) {
+	msr.NCalledHasOperationTypeByID += 1
+	return true, nil
 }
 
 func TestCreateAccount(t *testing.T) {

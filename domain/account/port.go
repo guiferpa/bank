@@ -1,6 +1,8 @@
 package account
 
-import "time"
+import (
+	"time"
+)
 
 type CreateAccountOptions struct {
 	DocumentNumber string
@@ -17,6 +19,7 @@ type StorageRepository interface {
 	CreateAccount(CreateAccountOptions) (uint, error)
 	GetAccountByID(uint) (Account, error)
 	HasAccountByDocumentNumber(string) (bool, error)
+	HasOperationTypeByID(uint) (bool, error)
 	CreateTransaction(CreateTransactionOptions) (uint, error)
 }
 

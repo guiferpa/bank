@@ -43,7 +43,8 @@ func NewHandlerInvalidParamError(errorCode ErrorCode, message, param string) *Ha
 }
 
 const (
-	DomainAccountAlreadyExistsErrorCode ErrorCode = "domain.1"
+	DomainAccountAlreadyExistsErrorCode     ErrorCode = "domain.1"
+	DomainOperationTypeDoesntExistErrorCode ErrorCode = "domain.2"
 )
 
 type DomainError struct {

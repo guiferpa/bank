@@ -5,8 +5,10 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github/guiferpa/bank/domain/account"
+	"github/guiferpa/bank/domain/log"
 
 	"github.com/ggicci/httpin"
 	"github.com/go-chi/render"
@@ -23,7 +25,7 @@ type CreateAccountResponseBody struct {
 	DocumentNumber string `json:"document_number"`
 }
 
-func CreateAccount(usecase account.UseCase) http.HandlerFunc {
+func CreateAccount(usecase account.UseCase, logger log.LoggerRepository) http.HandlerFunc {
 	validator := gody.NewValidator()
 	validator.AddRules(rule.NotEmpty)
 
@@ -85,6 +87,8 @@ func CreateAccount(usecase account.UseCase) http.HandlerFunc {
 			ID:             accountID,
 			DocumentNumber: options.DocumentNumber,
 		})
+
+		logger.Info(r.Context(), "account created successful")
 	})
 }
 
@@ -97,7 +101,7 @@ type GetAccountByIDResponseBody struct {
 	DocumentNumber string `json:"document_number"`
 }
 
-func GetAccountByID(usecase account.UseCase) http.HandlerFunc {
+func GetAccountByID(usecase account.UseCase, logger log.LoggerRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := r.Context().Value(httpin.Input).(*GetAccountByIDRequestParams)
 
@@ -119,13 +123,15 @@ func GetAccountByID(usecase account.UseCase) http.HandlerFunc {
 			ID:             acc.ID,
 			DocumentNumber: acc.DocumentNumber,
 		})
+
+		logger.Info(r.Context(), "account retrieved by id successful")
 	}
 }
 
 type CreateAccountTransactionRequestBody struct {
 	AccountID       uint    `json:"account_id" validate:"min=0"`
 	OperationTypeID uint    `json:"operation_type_id" validate:"min=0"`
-	Amount          float64 `json:"amount" validate:"not_zero not_empty"`
+	Amount          float64 `json:"amount" validate:"not_zero"`
 }
 
 type CreateAccountTransactionResponseBody struct {
@@ -149,13 +155,9 @@ func (r *NotZeroRule) Name() string {
 }
 
 func (r *NotZeroRule) Validate(field, value, _ string) (bool, error) {
-	if value == "" {
-		return true, &NotZeroError{field}
-	}
-
 	amount, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return false, &NotZeroError{field}
+		return true, &NotZeroError{field}
 	}
 
 	if amount == 0 {
@@ -165,9 +167,9 @@ func (r *NotZeroRule) Validate(field, value, _ string) (bool, error) {
 	return true, nil
 }
 
-func CreateAccountTransaction(usecase account.UseCase) http.HandlerFunc {
+func CreateAccountTransaction(usecase account.UseCase, logger log.LoggerRepository) http.HandlerFunc {
 	validator := gody.NewValidator()
-	validator.AddRules(rule.Min, &NotZeroRule{}, rule.NotEmpty)
+	validator.AddRules(rule.Min, &NotZeroRule{})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body CreateAccountTransactionRequestBody
@@ -215,13 +217,24 @@ func CreateAccountTransaction(usecase account.UseCase) http.HandlerFunc {
 			AccountID:       body.AccountID,
 			OperationTypeID: body.OperationTypeID,
 			Amount:          int64(body.Amount * 100),
+			EventDate:       time.Now(),
 		}
 		transID, err := usecase.CreateTransaction(options)
 		if err != nil {
 			render.Status(r, http.StatusInternalServerError)
 
-			if cerr, ok := err.(*account.DomainError); ok && cerr.Code == account.DomainAccountAlreadyExistsErrorCode {
-				render.Status(r, http.StatusConflict)
+			if cerr, ok := err.(*account.DomainError); ok {
+				if cerr.Code == account.DomainAccountAlreadyExistsErrorCode {
+					render.Status(r, http.StatusConflict)
+				}
+
+				if cerr.Code == account.DomainOperationTypeDoesntExistErrorCode {
+					render.Status(r, http.StatusUnprocessableEntity)
+				}
+			}
+
+			if cerr, ok := err.(*account.InfraError); ok && cerr.Code == account.InfraAccountNotFoundErrorCode {
+				render.Status(r, http.StatusUnprocessableEntity)
 			}
 
 			render.Respond(w, r, err)
@@ -233,5 +246,7 @@ func CreateAccountTransaction(usecase account.UseCase) http.HandlerFunc {
 		render.Respond(w, r, CreateAccountTransactionResponseBody{
 			ID: transID,
 		})
+
+		logger.Info(r.Context(), "account transaction created successful")
 	})
 }

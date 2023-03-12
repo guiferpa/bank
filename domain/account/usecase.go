@@ -1,7 +1,12 @@
 package account
 
+import (
+	"github/guiferpa/bank/domain/log"
+)
+
 type UseCaseService struct {
 	storage StorageRepository
+	logger  log.LoggerRepository
 }
 
 func (ucs *UseCaseService) CreateAccount(opts CreateAccountOptions) (uint, error) {
@@ -27,6 +32,15 @@ func (ucs *UseCaseService) CreateTransaction(opts CreateTransactionOptions) (uin
 		return 0, err
 	}
 
+	hasOperationType, err := ucs.storage.HasOperationTypeByID(opts.OperationTypeID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !hasOperationType {
+		return 0, NewDomainError(DomainOperationTypeDoesntExistErrorCode, "operation type doesn't exist")
+	}
+
 	transID, err := ucs.storage.CreateTransaction(opts)
 	if err != nil {
 		return 0, err
@@ -44,6 +58,6 @@ func (ucs *UseCaseService) GetAccountByID(accountID uint) (Account, error) {
 	return acc, nil
 }
 
-func NewUseCaseService(storage StorageRepository) *UseCaseService {
-	return &UseCaseService{storage}
+func NewUseCaseService(storage StorageRepository, logger log.LoggerRepository) *UseCaseService {
+	return &UseCaseService{storage, logger}
 }

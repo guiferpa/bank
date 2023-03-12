@@ -4,14 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"github/guiferpa/bank/domain/account"
+	"github/guiferpa/bank/domain/log"
 
 	driver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 type PostgresStorage struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger log.LoggerRepository
 }
 
 func (ps *PostgresStorage) CreateAccount(opts account.CreateAccountOptions) (uint, error) {
@@ -48,6 +51,15 @@ func (ps *PostgresStorage) HasAccountByDocumentNumber(documentNumber string) (bo
 	return dest > 0, nil
 }
 
+func (ps *PostgresStorage) HasOperationTypeByID(operationTypeID uint) (bool, error) {
+	var dest int64
+	if err := ps.db.Model(&OperationType{}).Select("*").Where("id = ?", operationTypeID).Count(&dest).Error; err != nil {
+		return false, account.NewInfraError(account.InfraUnknownError, err.Error())
+	}
+
+	return dest > 0, nil
+}
+
 func (ps *PostgresStorage) CreateTransaction(opts account.CreateTransactionOptions) (uint, error) {
 	model := &AccountTransaction{
 		AccountID:       opts.AccountID,
@@ -62,8 +74,8 @@ func (ps *PostgresStorage) CreateTransaction(opts account.CreateTransactionOptio
 	return model.ID, nil
 }
 
-func (ps *PostgresStorage) runSeed() error {
-	return ps.db.Debug().Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(OperationTypeSeedData, len(OperationTypeSeedData)).Error
+func (ps *PostgresStorage) RunSeed() error {
+	return ps.db.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(OperationTypeSeedData, len(OperationTypeSeedData)).Error
 }
 
 type NewStorageOptions struct {
@@ -72,11 +84,14 @@ type NewStorageOptions struct {
 	Password     string
 	DatabaseName string
 	Port         string
+	Logger       log.LoggerRepository
 }
 
 func NewStorage(opts NewStorageOptions) (*PostgresStorage, error) {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%v/%s?sslmode=%s", opts.User, opts.Password, opts.Host, opts.Port, opts.DatabaseName, "disable")
-	db, err := gorm.Open(driver.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(driver.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +109,7 @@ func NewStorage(opts NewStorageOptions) (*PostgresStorage, error) {
 		return nil, err
 	}
 
-	ps := &PostgresStorage{db}
-
-	// Reason which make me to do seed on my own hand: https://github.com/go-gorm/gorm/issues/5339
-	if err := ps.runSeed(); err != nil {
-		return nil, err
-	}
+	ps := &PostgresStorage{db, opts.Logger}
 
 	return ps, nil
 }
