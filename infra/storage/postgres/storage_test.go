@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github/guiferpa/bank/domain/account"
-	"github/guiferpa/bank/infra/infratest"
+	"github/guiferpa/bank/pkg/docker"
 )
 
 func TestRunSeed(t *testing.T) {
-	env, err := infratest.NewEnvironment()
+	env, err := docker.NewEnvironment()
 	if err != nil {
 		t.Error(err)
 		return
@@ -27,12 +27,19 @@ func TestRunSeed(t *testing.T) {
 		return
 	}
 
+	time.Sleep(2 * time.Second)
+
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",
 		User:         "postgres",
 		Password:     "Pa$$w0rd",
 		DatabaseName: "infra",
 		Port:         "5432",
+	}
+	client, err := NewStorage(newStorageOptions)
+	if err != nil {
+		t.Error(err)
+		return
 	}
 
 	suite := []struct {
@@ -42,8 +49,8 @@ func TestRunSeed(t *testing.T) {
 		{
 			Describe: "Seed done successful",
 			Spec: func(t *testing.T) {
-				client, err := NewStorage(newStorageOptions)
-				if err != nil {
+
+				if err := client.RunSeed(); err != nil {
 					t.Error(err)
 					return
 				}
@@ -63,14 +70,7 @@ func TestRunSeed(t *testing.T) {
 		{
 			Describe: "Seed duplicated ignored sucessful",
 			Spec: func(t *testing.T) {
-				_, err := NewStorage(newStorageOptions)
-				if err != nil {
-					t.Error(err)
-					return
-				}
-
-				client, err := NewStorage(newStorageOptions)
-				if err != nil {
+				if err := client.RunSeed(); err != nil {
 					t.Error(err)
 					return
 				}
@@ -89,8 +89,6 @@ func TestRunSeed(t *testing.T) {
 		},
 	}
 
-	time.Sleep(2 * time.Second)
-
 	for _, s := range suite {
 		t.Run(s.Describe, s.Spec)
 	}
@@ -104,7 +102,7 @@ func TestRunSeed(t *testing.T) {
 }
 
 func TestCreateAccount(t *testing.T) {
-	env, err := infratest.NewEnvironment()
+	env, err := docker.NewEnvironment()
 	if err != nil {
 		t.Error(err)
 		return
@@ -191,7 +189,7 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestGetAccountByID(t *testing.T) {
-	env, err := infratest.NewEnvironment()
+	env, err := docker.NewEnvironment()
 	if err != nil {
 		t.Error(err)
 		return
@@ -274,7 +272,7 @@ func TestGetAccountByID(t *testing.T) {
 }
 
 func TestCreateTransaction(t *testing.T) {
-	env, err := infratest.NewEnvironment()
+	env, err := docker.NewEnvironment()
 	if err != nil {
 		t.Error(err)
 		return
@@ -302,6 +300,11 @@ func TestCreateTransaction(t *testing.T) {
 	}
 	client, err := NewStorage(newStorageOptions)
 	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := client.RunSeed(); err != nil {
 		t.Error(err)
 		return
 	}
@@ -358,7 +361,7 @@ func TestCreateTransaction(t *testing.T) {
 }
 
 func TestHasAccountByDocumentNumber(t *testing.T) {
-	env, err := infratest.NewEnvironment()
+	env, err := docker.NewEnvironment()
 	if err != nil {
 		t.Error(err)
 		return

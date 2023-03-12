@@ -1,4 +1,4 @@
-package infratest
+package docker
 
 import (
 	"context"
