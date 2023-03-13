@@ -2,7 +2,9 @@ package log
 
 import "context"
 
-const LoggerContextKey = "__LOGGER_CTX_KEY__"
+type LoggerContextKeyType string
+
+const LoggerContextKey LoggerContextKeyType = "__LOGGER_CTX_KEY__"
 
 type LoggerContext struct {
 	RequestID string      `json:"request_id"`

@@ -27,7 +27,6 @@ type CreateAccountResponseBody struct {
 
 func CreateAccount(usecase account.UseCase, logger log.LoggerRepository) http.HandlerFunc {
 	validator := gody.NewValidator()
-	validator.AddRules(rule.NotEmpty)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body CreateAccountRequestBody
@@ -53,6 +52,13 @@ func CreateAccount(usecase account.UseCase, logger log.LoggerRepository) http.Ha
 			return
 		}
 		defer r.Body.Close()
+
+		if err := validator.AddRules(rule.NotEmpty); err != nil {
+			logger.Error(r.Context(), err.Error())
+			render.Status(r, http.StatusInternalServerError)
+			render.Respond(w, r, account.NewHandlerError(account.HandlerUnknwonErrorCode, err.Error()))
+			return
+		}
 
 		if _, err := validator.Validate(body); err != nil {
 			render.Status(r, http.StatusUnprocessableEntity)
@@ -146,9 +152,7 @@ func (err *NotZeroError) Error() string {
 	return "this value can't be zero"
 }
 
-type NotZeroRule struct {
-	value float64
-}
+type NotZeroRule struct{}
 
 func (r *NotZeroRule) Name() string {
 	return "not_zero"
@@ -169,7 +173,6 @@ func (r *NotZeroRule) Validate(field, value, _ string) (bool, error) {
 
 func CreateAccountTransaction(usecase account.UseCase, logger log.LoggerRepository) http.HandlerFunc {
 	validator := gody.NewValidator()
-	validator.AddRules(rule.Min, &NotZeroRule{})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body CreateAccountTransactionRequestBody
@@ -195,6 +198,13 @@ func CreateAccountTransaction(usecase account.UseCase, logger log.LoggerReposito
 			return
 		}
 		defer r.Body.Close()
+
+		if err := validator.AddRules(rule.Min, &NotZeroRule{}); err != nil {
+			logger.Error(r.Context(), err.Error())
+			render.Status(r, http.StatusInternalServerError)
+			render.Respond(w, r, account.NewHandlerError(account.HandlerUnknwonErrorCode, err.Error()))
+			return
+		}
 
 		if _, err := validator.Validate(body); err != nil {
 			render.Status(r, http.StatusUnprocessableEntity)

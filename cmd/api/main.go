@@ -51,5 +51,7 @@ func main() {
 
 	logger.Info(ctx, fmt.Sprintf("API's running at port %v", port))
 
-	http.ListenAndServe(fmt.Sprintf(":%s", port), handler)
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), handler); err != nil {
+		logger.Error(ctx, err.Error())
+	}
 }
