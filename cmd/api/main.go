@@ -14,10 +14,6 @@ import (
 	"github/guiferpa/bank/infra/storage/postgres"
 )
 
-func Run() {
-
-}
-
 func main() {
 	value := logd.LoggerContext{
 		RequestID: fmt.Sprintf("%v", time.Now().Unix()),
