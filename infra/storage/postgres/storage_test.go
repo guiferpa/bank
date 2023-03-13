@@ -1,3 +1,5 @@
+//go:build integration
+
 package postgres
 
 import (
@@ -27,7 +29,7 @@ func TestRunSeed(t *testing.T) {
 		return
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",
@@ -119,7 +121,7 @@ func TestCreateAccount(t *testing.T) {
 		return
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",
@@ -206,7 +208,7 @@ func TestGetAccountByID(t *testing.T) {
 		return
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",
@@ -289,7 +291,7 @@ func TestCreateTransaction(t *testing.T) {
 		return
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",
@@ -378,7 +380,7 @@ func TestHasAccountByDocumentNumber(t *testing.T) {
 		return
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	newStorageOptions := NewStorageOptions{
 		Host:         "localhost",

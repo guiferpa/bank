@@ -14,6 +14,10 @@ import (
 	"github/guiferpa/bank/infra/storage/postgres"
 )
 
+func Run() {
+
+}
+
 func main() {
 	value := logd.LoggerContext{
 		RequestID: fmt.Sprintf("%v", time.Now().Unix()),
@@ -46,5 +50,6 @@ func main() {
 	port := os.Getenv("PORT")
 
 	logger.Info(ctx, fmt.Sprintf("API's running at port %v", port))
+
 	http.ListenAndServe(fmt.Sprintf(":%s", port), handler)
 }

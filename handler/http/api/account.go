@@ -224,17 +224,13 @@ func CreateAccountTransaction(usecase account.UseCase, logger log.LoggerReposito
 			render.Status(r, http.StatusInternalServerError)
 
 			if cerr, ok := err.(*account.DomainError); ok {
-				if cerr.Code == account.DomainAccountAlreadyExistsErrorCode {
-					render.Status(r, http.StatusConflict)
-				}
-
 				if cerr.Code == account.DomainOperationTypeDoesntExistErrorCode {
-					render.Status(r, http.StatusUnprocessableEntity)
+					render.Status(r, http.StatusNotFound)
 				}
 			}
 
 			if cerr, ok := err.(*account.InfraError); ok && cerr.Code == account.InfraAccountNotFoundErrorCode {
-				render.Status(r, http.StatusUnprocessableEntity)
+				render.Status(r, http.StatusNotFound)
 			}
 
 			render.Respond(w, r, err)
