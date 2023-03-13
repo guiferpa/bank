@@ -11,7 +11,7 @@ import (
 	"github/guiferpa/bank/pkg/docker"
 )
 
-func TestRunSeed(t *testing.T) {
+func TestIntegrationForInfra(t *testing.T) {
 	env, err := docker.NewEnvironment()
 	if err != nil {
 		t.Error(err)
@@ -28,6 +28,13 @@ func TestRunSeed(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
+	defer func() {
+		if err := env.KillContainer(ctx, containerID); err != nil {
+			t.Error(err)
+			return
+		}
+	}()
 
 	time.Sleep(4 * time.Second)
 
@@ -51,7 +58,6 @@ func TestRunSeed(t *testing.T) {
 		{
 			Describe: "Seed done successful",
 			Spec: func(t *testing.T) {
-
 				if err := client.RunSeed(); err != nil {
 					t.Error(err)
 					return
@@ -89,59 +95,8 @@ func TestRunSeed(t *testing.T) {
 				}
 			},
 		},
-	}
-
-	for _, s := range suite {
-		t.Run(s.Describe, s.Spec)
-	}
-
-	defer func() {
-		if err := env.KillContainer(ctx, containerID); err != nil {
-			t.Error(err)
-			return
-		}
-	}()
-}
-
-func TestCreateAccount(t *testing.T) {
-	env, err := docker.NewEnvironment()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	ctx := context.Background()
-
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5433", "5432", []string{
-		"POSTGRES_PASSWORD=Pa$$w0rd",
-		"POSTGRES_DB=infra",
-	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	time.Sleep(4 * time.Second)
-
-	newStorageOptions := NewStorageOptions{
-		Host:         "localhost",
-		User:         "postgres",
-		Password:     "Pa$$w0rd",
-		DatabaseName: "infra",
-		Port:         "5433",
-	}
-	client, err := NewStorage(newStorageOptions)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	suite := []struct {
-		Describe string
-		Spec     func(t *testing.T)
-	}{
 		{
-			Describe: "Created successful",
+			Describe: "Created account successful",
 			Spec: func(t *testing.T) {
 				createAccountOptions := account.CreateAccountOptions{
 					DocumentNumber: "42",
@@ -165,7 +120,7 @@ func TestCreateAccount(t *testing.T) {
 			},
 		},
 		{
-			Describe: "Duplicated account",
+			Describe: "Got duplicated account error when create account with the same document number",
 			Spec: func(t *testing.T) {
 				createAccountOptions := account.CreateAccountOptions{
 					DocumentNumber: "42",
@@ -176,68 +131,12 @@ func TestCreateAccount(t *testing.T) {
 				}
 			},
 		},
-	}
-
-	for _, s := range suite {
-		t.Run(s.Describe, s.Spec)
-	}
-
-	defer func() {
-		if err := env.KillContainer(ctx, containerID); err != nil {
-			t.Error(err)
-			return
-		}
-	}()
-}
-
-func TestGetAccountByID(t *testing.T) {
-	env, err := docker.NewEnvironment()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	ctx := context.Background()
-
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5434", "5432", []string{
-		"POSTGRES_PASSWORD=Pa$$w0rd",
-		"POSTGRES_DB=infra",
-	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	time.Sleep(4 * time.Second)
-
-	newStorageOptions := NewStorageOptions{
-		Host:         "localhost",
-		User:         "postgres",
-		Password:     "Pa$$w0rd",
-		DatabaseName: "infra",
-		Port:         "5434",
-	}
-	client, err := NewStorage(newStorageOptions)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	suite := []struct {
-		Describe string
-		Spec     func(t *testing.T)
-	}{
 		{
-			Describe: "Got successful",
+			Describe: "Got account successful",
 			Spec: func(t *testing.T) {
 				documentNumber := "42"
-				data := Account{DocumentNumber: documentNumber}
-				if err := client.db.Create(&data).Error; err != nil {
-					t.Error(err)
-					return
-				}
 
-				acc, err := client.GetAccountByID(data.ID)
+				acc, err := client.GetAccountByID(1)
 				if err != nil {
 					t.Error(err)
 					return
@@ -250,7 +149,7 @@ func TestGetAccountByID(t *testing.T) {
 			},
 		},
 		{
-			Describe: "Not found",
+			Describe: "Got account not found when get account by ID",
 			Spec: func(t *testing.T) {
 				_, err := client.GetAccountByID(2)
 				if _, ok := err.(*account.InfraError); !ok {
@@ -259,73 +158,11 @@ func TestGetAccountByID(t *testing.T) {
 				}
 			},
 		},
-	}
-
-	for _, s := range suite {
-		t.Run(s.Describe, s.Spec)
-	}
-
-	defer func() {
-		if err := env.KillContainer(ctx, containerID); err != nil {
-			t.Error(err)
-			return
-		}
-	}()
-}
-
-func TestCreateTransaction(t *testing.T) {
-	env, err := docker.NewEnvironment()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	ctx := context.Background()
-
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5435", "5432", []string{
-		"POSTGRES_PASSWORD=Pa$$w0rd",
-		"POSTGRES_DB=infra",
-	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	time.Sleep(4 * time.Second)
-
-	newStorageOptions := NewStorageOptions{
-		Host:         "localhost",
-		User:         "postgres",
-		Password:     "Pa$$w0rd",
-		DatabaseName: "infra",
-		Port:         "5435",
-	}
-	client, err := NewStorage(newStorageOptions)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if err := client.RunSeed(); err != nil {
-		t.Error(err)
-		return
-	}
-
-	suite := []struct {
-		Describe string
-		Spec     func(t *testing.T)
-	}{
 		{
-			Describe: "Created successful",
+			Describe: "Created account transaction successful",
 			Spec: func(t *testing.T) {
-				acc := &Account{DocumentNumber: "42"}
-				if err := client.db.Create(&acc).Error; err != nil {
-					t.Error(err)
-					return
-				}
-
 				transOptions := account.CreateTransactionOptions{
-					AccountID:       acc.ID,
+					AccountID:       1,
 					OperationTypeID: 1, // COMPRA A VISTA
 					Amount:          -10_00,
 					EventDate:       time.Now(),
@@ -348,66 +185,10 @@ func TestCreateTransaction(t *testing.T) {
 				}
 			},
 		},
-	}
-
-	for _, s := range suite {
-		t.Run(s.Describe, s.Spec)
-	}
-
-	defer func() {
-		if err := env.KillContainer(ctx, containerID); err != nil {
-			t.Error(err)
-			return
-		}
-	}()
-}
-
-func TestHasAccountByDocumentNumber(t *testing.T) {
-	env, err := docker.NewEnvironment()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	ctx := context.Background()
-
-	containerID, err := env.RunContainer(ctx, "postgres:14", "5436", "5432", []string{
-		"POSTGRES_PASSWORD=Pa$$w0rd",
-		"POSTGRES_DB=infra",
-	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	time.Sleep(4 * time.Second)
-
-	newStorageOptions := NewStorageOptions{
-		Host:         "localhost",
-		User:         "postgres",
-		Password:     "Pa$$w0rd",
-		DatabaseName: "infra",
-		Port:         "5436",
-	}
-	client, err := NewStorage(newStorageOptions)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	suite := []struct {
-		Describe string
-		Spec     func(t *testing.T)
-	}{
 		{
-			Describe: "Got successful",
+			Describe: "Got account by document number successful",
 			Spec: func(t *testing.T) {
 				acc := &Account{DocumentNumber: "42"}
-				if err := client.db.Create(&acc).Error; err != nil {
-					t.Error(err)
-					return
-				}
-
 				has, err := client.HasAccountByDocumentNumber(acc.DocumentNumber)
 				if err != nil {
 					t.Error(err)
@@ -421,7 +202,7 @@ func TestHasAccountByDocumentNumber(t *testing.T) {
 			},
 		},
 		{
-			Describe: "Got none successful",
+			Describe: "Got none account by document number successful",
 			Spec: func(t *testing.T) {
 				acc := &Account{DocumentNumber: "43"}
 				if err := client.db.Create(&acc).Error; err != nil {
@@ -446,11 +227,4 @@ func TestHasAccountByDocumentNumber(t *testing.T) {
 	for _, s := range suite {
 		t.Run(s.Describe, s.Spec)
 	}
-
-	defer func() {
-		if err := env.KillContainer(ctx, containerID); err != nil {
-			t.Error(err)
-			return
-		}
-	}()
 }
