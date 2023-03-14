@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"github/guiferpa/bank/domain/account"
 	logd "github/guiferpa/bank/domain/log"
@@ -16,7 +15,7 @@ import (
 
 func main() {
 	value := logd.LoggerContext{
-		RequestID: fmt.Sprintf("%v", time.Now().Unix()),
+		RequestID: "",
 	}
 	ctx := context.WithValue(context.Background(), logd.LoggerContextKey, &value)
 

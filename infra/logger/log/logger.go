@@ -34,6 +34,7 @@ func (l *Logger) Info(ctx context.Context, msg string) {
 
 	l.logger.Info(msg,
 		zap.String("request_id", cctx.RequestID),
+		zap.Any("payload", cctx.Payload),
 	)
 }
 
