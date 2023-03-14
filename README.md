@@ -5,6 +5,7 @@
   - [Executing binary](#executing-binary)
   - [Containerizing binary](#containerizing-binary)
   - [Executing container with binary](#executing-container-with-binary)
+  - [Build and executing using Docker Compose](#building-and-executing-all-environment-with-docker-compose)
   
 - [Tasks](#tasks)
   - [Running lint](#running-lint)
@@ -48,6 +49,14 @@ take a look at [docker-compose.yaml]() var environments
 $ docker run -it bank
 ```
 
+### Building and executing all environment with Docker Compose
+
+> :balloon: It's necessary has [docker](https://www.docker.com/get-started/) and [docker compose](https://docs.docker.com/compose/) installed
+
+```sh
+$ docker compose up --build
+```
+
 ## Tasks
 
 > :balloon: This project has `Makefile` as job runner
@@ -65,7 +74,7 @@ $ make test
 ### Running all tests (including integration tests)
 
 > :balloon: It's necessary has [docker](https://www.docker.com/get-started/) and [docker compose](https://docs.docker.com/compose/) installed then
-pull image `postgres:14` which's app's database tech.
+pull image `postgres:14` which's app's database tech
 
 ```sh
 $ make integration
